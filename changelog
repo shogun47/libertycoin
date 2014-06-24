@@ -1,0 +1,7 @@
+v1.0.0.1:
++invalidated public coins
++removed ability to stake (pub. coins)
++changed alert public key
++changed checkpoint sync. master key
++added masternode 23.94.38.173
++version build 1.0.0.1
