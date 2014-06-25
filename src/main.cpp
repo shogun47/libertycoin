@@ -2134,12 +2134,12 @@ bool CBlock::AcceptBlock()
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, vtx)
-    {
+	{
         if (!tx.IsFinal(nHeight, GetBlockTime()))
             return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
      	
      	/*reject banned coins*/
-     		if(nHeight > 76625){
+			if(nHeight > 76625){
 				static const CBitcoinAddress badkey ("LZ2suWZw4RoCVT4amdUJRzu4pLawnfQEjR");
 				for (unsigned int i = 0; i < tx.vin.size(); i++){
 					uint256 hashBlock;
@@ -2147,16 +2147,15 @@ bool CBlock::AcceptBlock()
 					if(GetTransaction(tx.vin[i].prevout.hash, txPrev, hashBlock)){ 
 						CTxDestination source;
 						if (ExtractDestination(txPrev.vout[tx.vin[i].prevout.n].scriptPubKey, source)){
-						CBitcoinAddress addressSource(source);
+							CBitcoinAddress addressSource(source);
 							if (badkey.Get() == addressSource.Get()){
 								return error("CBlock::AcceptBlock() : Banned Address %s tried to send a transaction (rejecting it).", addressSource.ToString().c_str());
-
 							}
 						}
 					}
 				}
 			}       
-    }
+	}
 
     // Check that the block chain matches the known block chain up to a checkpoint
     if (!Checkpoints::CheckHardened(nHeight, hash))
@@ -2256,34 +2255,6 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (!pblock->CheckBlock())
         return error("ProcessBlock() : CheckBlock FAILED");
 
-	/*block staking for invalidated coins*/
-	    map<uint256, CBlockIndex*>::iterator mapindx = mapBlockIndex.find(pblock->hashPrevBlock);
-        
-        if (mapindx == mapBlockIndex.end())
-           return error("AcceptBlock() : prev block not found");
-        
-        CBlockIndex* pindexPrev = (*mapindx).second;
-        int nHeight = pindexPrev->nHeight+1;
-
-        if (nHeight > 76625)
-        {
-			const CTxIn& txin = pblock->vtx[1].vin[0];
-			static const CBitcoinAddress badkey ("LZ2suWZw4RoCVT4amdUJRzu4pLawnfQEjR");
-			uint256 hashBlock;
-			CTransaction txPrev;
-
-			if(GetTransaction(txin.prevout.hash, txPrev, hashBlock)){ 
-				CTxDestination source;
-				if (ExtractDestination(txPrev.vout[txin.prevout.n].scriptPubKey, source)){ 
-					CBitcoinAddress addressSource(source);
-					printf ("Height %d, Address Source: %s \n",nHeight, addressSource.ToString().c_str());
-						if (badkey.Get() == addressSource.Get()){
-							return error("Banned Address %s tried to stake (rejecting transaction...).", addressSource.ToString().c_str());
-						}
-				}
-			}
-        }
-
 
     CBlockIndex* pcheckpoint = Checkpoints::GetLastSyncCheckpoint();
     if (pcheckpoint && pblock->hashPrevBlock != hashBestChain && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
@@ -2340,6 +2311,34 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         }
         return true;
     }
+    
+    /*block staking for invalidated coins*/
+	    map<uint256, CBlockIndex*>::iterator mapindx = mapBlockIndex.find(pblock->hashPrevBlock);
+        
+        if (mapindx == mapBlockIndex.end())
+           return error("AcceptBlock() : prev block not found");
+        
+        CBlockIndex* pindexPrev = (*mapindx).second;
+        int nHeight = pindexPrev->nHeight+1;
+
+        if (nHeight > 76625)
+        {
+			const CTxIn& txin = pblock->vtx[1].vin[0];
+			static const CBitcoinAddress badkey ("LZ2suWZw4RoCVT4amdUJRzu4pLawnfQEjR");
+			uint256 hashBlock;
+			CTransaction txPrev;
+
+			if(GetTransaction(txin.prevout.hash, txPrev, hashBlock)){ 
+				CTxDestination source;
+				if (ExtractDestination(txPrev.vout[txin.prevout.n].scriptPubKey, source)){ 
+					CBitcoinAddress addressSource(source);
+					printf ("Height %d, Address Source: %s \n",nHeight, addressSource.ToString().c_str());
+						if (badkey.Get() == addressSource.Get()){
+							return error("Banned Address %s tried to stake (rejecting transaction...).", addressSource.ToString().c_str());
+						}
+				}
+			}
+        }
 
     // Store to disk
     if (!pblock->AcceptBlock())
