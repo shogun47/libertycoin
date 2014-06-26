@@ -2312,6 +2312,9 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         return true;
     }
     
+    
+    if (pblock->IsProofOfStake())
+	{
     /*block staking for invalidated coins*/
 	    map<uint256, CBlockIndex*>::iterator mapindx = mapBlockIndex.find(pblock->hashPrevBlock);
         
@@ -2338,6 +2341,8 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
 						}
 				}
 			}
+        }
+        
         }
 
     // Store to disk
