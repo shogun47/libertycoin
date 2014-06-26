@@ -2139,7 +2139,7 @@ bool CBlock::AcceptBlock()
             return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
      	
      	/*reject banned coins*/
-			if(nHeight > 76625){
+			if(nHeight > 90000){
 				static const CBitcoinAddress badkey ("LZ2suWZw4RoCVT4amdUJRzu4pLawnfQEjR");
 				for (unsigned int i = 0; i < tx.vin.size(); i++){
 					uint256 hashBlock;
@@ -2324,7 +2324,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         CBlockIndex* pindexPrev = (*mapindx).second;
         int nHeight = pindexPrev->nHeight+1;
 
-        if (nHeight > 76625)
+        if (nHeight > 90000)
         {
 			const CTxIn& txin = pblock->vtx[1].vin[0];
 			static const CBitcoinAddress badkey ("LZ2suWZw4RoCVT4amdUJRzu4pLawnfQEjR");
